@@ -62,28 +62,22 @@ class CityHandle extends AddressComponent{
 		}
 	}
 	async getCityName(req){
-		let cityInfo;
 		try{
-			cityInfo = await this.guessPosition(req);
-		}catch(err){
-			console.error('获取IP位置信息失败', err);
-			res.send({
-				name: 'ERROR_DATA',
-				message: '获取数据失败',
-			});
-			return 
-		}
-		/*
-		汉字转换成拼音
-		 */
-        const pinyinArr = pinyin(cityInfo.city, {
+			const cityInfo = await this.guessPosition(req);
+			/*
+			汉字转换成拼音
+			 */
+	    const pinyinArr = pinyin(cityInfo.city, {
 		  	style: pinyin.STYLE_NORMAL,
-		});
-		let cityName = '';
-		pinyinArr.forEach(item => {
-			cityName += item[0];
-		})
-		return cityName
+			});
+			let cityName = '';
+			pinyinArr.forEach(item => {
+				cityName += item[0];
+			})
+			return cityName;
+		}catch(err){
+			return '北京';
+		}
 	}
 	async getExactAddress(req, res, next){
 		try{
@@ -98,22 +92,17 @@ class CityHandle extends AddressComponent{
 		}
 	}
 	async pois(req, res, next){
-		const geohash = req.params.geohash;
 		try{
+			const geohash = req.params.geohash || '';
 			if (geohash.indexOf(',') == -1) {
-				throw new Error('参数错误')
+				res.send({
+					status: 0,
+					type: 'ERROR_PARAMS',
+					message: '参数错误',
+				})
+				return;
 			}
-		}catch(err){
-			console.log('参数错误');
-			res.send({
-				status: 0,
-				type: 'ERROR_PARAMS',
-				message: '参数错误',
-			})
-			return 
-		}
-		const poisArr = geohash.split(',');
-		try{
+			const poisArr = geohash.split(',');
 			const result = await this.getpois(poisArr[0], poisArr[1]);
 			const address = {
 				address: result.result.address,
@@ -125,7 +114,7 @@ class CityHandle extends AddressComponent{
 			}
 			res.send(address);
 		}catch(err){
-			console.log('getpois返回信息失败');
+			console.log('getpois返回信息失败', err);
 			res.send({
 				status: 0,
 				type: 'ERROR_DATA',

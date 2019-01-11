@@ -52,6 +52,15 @@ class Shop extends AddressComponent{
 				})
 				return
 			}
+			const exists = await ShopModel.findOne({name: fields.name});
+			if (exists) {
+				res.send({
+					status: 0,
+					type: 'RESTURANT_EXISTS',
+					message: '店铺已存在，请尝试其他店铺名称'
+				})
+				return
+			}
 			const opening_hours = fields.startTime&&fields.endTime? fields.startTime + '/' + fields.endTime : "8:30/20:30";
 			const newShop = {
 				name: fields.name,
@@ -275,6 +284,7 @@ class Shop extends AddressComponent{
 				})
 			}
 		}catch(err){
+			// 百度地图达到上限后会导致加车失败，需优化
 			console.log('从addressComoponent获取测距数据失败', err);
 			restaurants.map((item, index) => {
 				return Object.assign(item, {distance: '10公里', order_lead_time: '40分钟'})
